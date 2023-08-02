@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/v1993/evdevhook2">
+    <file>DeviceTypes.ini</file>
+  </gresource>
+</gresources>
