@@ -1,0 +1,31 @@
+name: Meson
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  # Customize the Meson build type here (plain, debug, debugoptimized, release, minsize, custom)
+  BUILD_TYPE: release
+  ENABLE_LTO: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: meson ninja valac libudev-dev libevdev-dev zlib1g-dev libgee-0.8-dev
+        version: 1.0
+
+    - name: Setup build directory
+      run: meson setup ${{github.workspace}}/build --buildtype=${{env.BUILD_TYPE}} -Db_lto=${{env.ENABLE_LTO}}
+
+    - name: Build
+      run: meson compile -C ${{github.workspace}}/build

@@ -26,10 +26,10 @@ different ports, it's possible to do so by providing a config file. See
 ```bash
 git clone --recursive https://github.com/v1993/evdevhook2.git
 cd evdevhook2
-meson --buildtype=release -Db_lto=true --prefix=/usr build
-ninja -C build
+meson setup --buildtype=release -Db_lto=true --prefix=/usr build
+meson compile -C build
 # Optional
-ninja -C build install
+meson install -C build
 ```
 
 ### Updating
@@ -37,9 +37,9 @@ ninja -C build install
 cd evdevhook2
 git pull
 git submodule update --recursive --init
-ninja -C build
+meson compile -C build
 # Optional
-ninja -C build install
+meson install -C build
 ```
 
 ## Dependencies
