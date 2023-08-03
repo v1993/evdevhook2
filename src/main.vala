@@ -73,20 +73,21 @@ the Free Software Foundation, either version 3 of the License, or
 	}
 
 	public override void open(File[] files, string hint) {
-		// FIXME: accept multiple config files(?), load config, call activate() to start server
-		/*
 		if (files.length != 1) {
-			print("Exactly single config file must be provided.");
+			print("Zero or one config files must be provided.\n");
 			Process.exit(1);
 		}
 
 		try {
-			config.kfile.load_from_file(files[0].get_path(), NONE);
-			config.init_from_keyfile();
+			config.load_device_config(files[0].get_path());
 		} catch (Error e) {
-			print("Error reading config file: %s\n", e.message);
+			print("Error lodaing config file: %s\n", e.message);
 			return;
-		}*/
+		}
+
+		if (config.allowlist_mode) {
+			print("Allowlist mode enabled - only devices with a section in config will be served.\n");
+		}
 
 		activate();
 	}

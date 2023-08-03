@@ -9,7 +9,7 @@
 * DualSense controller
 
 Please note that as of right now only Nintendo controllers were tested. DualShock
-and Dual Sense *should* work - feedback would be very welcome.
+and DualSense *should* work - feedback would be very welcome.
 
 ## Configuration
 
@@ -18,7 +18,8 @@ it will expose all supported controllers!
 
 However, if you want to tweak controller orientations, run server on a different
 port, or use over four controllers at once by running multiple servers on
-different ports, it's possible to do so
+different ports, it's possible to do so by providing a config file. See
+[example config](ExampleConfig.ini) for syntax and full list of supported options.
 
 ## Quick build guide
 

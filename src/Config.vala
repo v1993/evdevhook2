@@ -156,7 +156,51 @@ namespace Evdevhook {
 			}
 		}
 
-		// TODO: load per-device (and main section) settings from config file
+		public void load_device_config(string path) throws Error {
+			var kfile = new KeyFile();
+			kfile.load_from_file(path, NONE);
+
+			if (kfile.has_group(MAIN_GROUP)) {
+				foreach (unowned string key in kfile.get_keys(MAIN_GROUP)) {
+					switch(key) {
+						case "Port":
+							port = (uint16)kfile.get_uint64(MAIN_GROUP, key);
+							break;
+						case "AllowlistMode":
+							allowlist_mode = kfile.get_boolean(MAIN_GROUP, key);
+							break;
+						default:
+							warning("Unknown configuration key %s", key);
+							break;
+					}
+				}
+			}
+
+			foreach (unowned string group in kfile.get_groups()) {
+				if (group == MAIN_GROUP) {
+					// Main configuration - already handled
+					continue;
+				}
+
+				var devconf = new DeviceConfig();
+
+				foreach (unowned string key in kfile.get_keys(group)) {
+					switch(key) {
+						case "Orientation":
+							var orient = kfile.get_string(group, key);
+							if (!Cemuhook.DeviceOrientation.try_parse(orient, out devconf.orientation)) {
+								warning("Unknown orientation %s", orient);
+							}
+							break;
+						default:
+							warning("Unknown configuration key %s", key);
+							break;
+					}
+				}
+
+				device_configs[group] = (owned)devconf;
+			}
+		}
 
 		public DeviceTypeConfig? get_device_type_config(uint16 vid, uint16 pid) {
 			var devtypeid = new DeviceTypeIdentifier(vid, pid);
