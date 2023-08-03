@@ -262,7 +262,7 @@ namespace Evdevhook {
 							break;
 						}
 					}
-					GLib.Timeout.add_once(500, () => { battery_reader.callback(); });
+					GLib.Timeout.add(500, () => { battery_reader.callback(); return Source.REMOVE; });
 					yield;
 				}
 
@@ -278,7 +278,7 @@ namespace Evdevhook {
 					if (battery_status == NA) {
 						battery_status = battery_percentage_to_cemuhook(battery.percentage);
 					}
-					GLib.Timeout.add_once(5000, () => { battery_reader.callback(); });
+					GLib.Timeout.add(5000, () => { battery_reader.callback(); return Source.REMOVE; });
 					yield;
 				}
 			} catch(IOError.CANCELLED e) {
