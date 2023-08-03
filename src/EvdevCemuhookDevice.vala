@@ -180,7 +180,7 @@ namespace Evdevhook {
 		}
 
 		private void destroy() {
-			print(@"Device $(dev.uniq) disconnected\n");
+			print("Device %s disconnected\n", dev.uniq);
 			disconnected();
 		}
 

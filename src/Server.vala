@@ -101,7 +101,7 @@ namespace Evdevhook {
 						}
 					}
 
-					print("%s", @"Found device $(dev.name) (unique identifier '$(dev.uniq)') - connecting... ");
+					print("Found device %s (unique identifier '%s') - connecting... ", dev.name, dev.uniq);
 					add_device(new EvdevCemuhookDevice((owned)dev, (owned)iochan, (owned)devtypeconf, (owned)devconf));
 					print("done!\n");
 				}
