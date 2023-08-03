@@ -1,5 +1,9 @@
 evdevhook2_sources = [
+  'dbus/upower_core.vala',
+  'dbus/upower_device.vala',
+
   'main.vala',
+
   'Config.vala',
   'EvdevCemuhookDevice.vala',
   'Server.vala',

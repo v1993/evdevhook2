@@ -49,14 +49,69 @@ namespace Evdevhook {
 		}
 	}
 
+	private Cemuhook.BatteryStatus battery_state_to_cemuhook(uint state) {
+		switch(state) {
+			case 1:
+				return CHARGING;
+			case 4:
+				return CHARGED;
+			default:
+				return NA;
+		}
+	}
+
+	private Cemuhook.BatteryStatus battery_level_to_cemuhook(uint level) {
+		switch(level) {
+			case 3:
+				return LOW;
+			case 4:
+				return DYING;
+			case 6:
+				return MEDIUM;
+			case 7:
+				return HIGH;
+			case 8:
+				return FULL;
+			default:
+				return NA;
+		}
+	}
+
+	private Cemuhook.BatteryStatus battery_percentage_to_cemuhook(double percentage) {
+		if (percentage == 0.0) {
+			return NA;
+		}
+
+		if (percentage > 90.0) {
+			return FULL;
+		}
+
+		if (percentage > 60.0) {
+			return HIGH;
+		}
+
+		if (percentage > 30.0) {
+			return MEDIUM;
+		}
+
+		if (percentage > 10.0) {
+			return LOW;
+		}
+
+		return DYING;
+	}
+
 	sealed class EvdevCemuhookDevice: Object, Cemuhook.AbstractPhysicalDevice {
 		private Evdev.Device dev;
 		private IOChannel dev_iochan;
 		private DeviceTypeConfig devtypeconf;
 		private DeviceConfig devconf;
 
+		private Cancellable cancellable = new Cancellable();
+
 		private Cemuhook.DeviceType devtype = NO_MOTION;
 		private Cemuhook.ConnectionType connection_type = OTHER;
+		private Cemuhook.BatteryStatus battery_status = NA;
 		private bool has_timestamp_event = false;
 		private uint64 motion_timestamp = 0;
 		private uint64 mac = 0;
@@ -95,6 +150,9 @@ namespace Evdevhook {
 
 			IOFunc cb = process_incoming;
 			dev_iochan.add_watch(IN | HUP, cb);
+			if (new Config().use_upower) {
+				battery_reader.begin();
+			}
 		}
 
 		private bool process_incoming(IOChannel source, IOCondition condition) {
@@ -181,11 +239,60 @@ namespace Evdevhook {
 
 		private void destroy() {
 			print("Device %s disconnected\n", dev.uniq);
+			cancellable.cancel();
 			disconnected();
+		}
+
+		/*
+		 * It's worth mentioning that access to members of proxy objects results in synchronous dbus calls.
+		 * While this does not seem to cause issues in practice, it theoretically might. If it does,
+		 * use org.freedesktop.DBus.Properties interface directly instead of relying on wrappers.
+		 */
+		private async void battery_reader() {
+			try {
+				UPower.Device battery = null;
+				var core = yield Bus.get_proxy<UPower.Core>(SYSTEM, "org.freedesktop.UPower", "/org/freedesktop/UPower", NONE, cancellable);
+				// Retry a few times with a pause to ensure that UPower has time to initialize the device
+				for (int i = 0; battery == null && i < 4; ++i) {
+					cancellable.set_error_if_cancelled();
+					foreach (var devpath in yield core.enumerate_devices()) {
+						var upower_dev = yield Bus.get_proxy<UPower.Device>(SYSTEM, "org.freedesktop.UPower", devpath, NONE, cancellable);
+						if (upower_dev.serial == dev.uniq) {
+							battery = (owned)upower_dev;
+							break;
+						}
+					}
+					GLib.Timeout.add_once(500, () => { battery_reader.callback(); });
+					yield;
+				}
+
+				if (battery == null) {
+					return;
+				}
+
+				while(!cancellable.is_cancelled()) {
+					battery_status = battery_state_to_cemuhook(battery.state);
+					if (battery_status == NA) {
+						battery_status = battery_level_to_cemuhook(battery.battery_level);
+					}
+					if (battery_status == NA) {
+						battery_status = battery_percentage_to_cemuhook(battery.percentage);
+					}
+					GLib.Timeout.add_once(5000, () => { battery_reader.callback(); });
+					yield;
+				}
+			} catch(IOError.CANCELLED e) {
+				// Expected
+			} catch(Error e) {
+				warning("Error in battery reader: %s\n", e.message);
+			} finally {
+				battery_status = NA;
+			}
 		}
 
 		public Cemuhook.DeviceType get_device_type() { return devtype; }
 		public Cemuhook.ConnectionType get_connection_type() { return connection_type; }
+		public Cemuhook.BatteryStatus get_battery() { return battery_status; }
 
 		public uint64 get_mac() { return mac; }
 

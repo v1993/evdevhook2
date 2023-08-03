@@ -111,6 +111,7 @@ namespace Evdevhook {
 
 		public uint16 port { get; private set; default = 26760; }
 		public bool allowlist_mode { get; private set; default = false; }
+		public bool use_upower { get; private set; default = true; }
 
 		construct {
 			device_type_configs = new HashMap<DeviceTypeIdentifier, DeviceTypeConfig>();
@@ -168,6 +169,9 @@ namespace Evdevhook {
 							break;
 						case "AllowlistMode":
 							allowlist_mode = kfile.get_boolean(MAIN_GROUP, key);
+							break;
+						case "UseUPower":
+							use_upower = kfile.get_boolean(MAIN_GROUP, key);
 							break;
 						default:
 							warning("Unknown configuration key %s", key);
