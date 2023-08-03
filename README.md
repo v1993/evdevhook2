@@ -1,4 +1,5 @@
 # Cemuhook UDP server for devices with modern Linux drivers - successor to original evdevhook
+![GitHub Actions - Build Status](https://img.shields.io/github/actions/workflow/status/v1993/evdevhook2/meson.yml)
 
 ## Supported devices
 
