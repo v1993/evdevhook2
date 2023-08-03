@@ -48,7 +48,15 @@ meson install -C build
 * libevdev
 * GLib 2.50+
 * zlib
-* Vala 0.56+ and libgee-0.8 (Ubuntu and derivatives should use [Vala Next PPA](https://launchpad.net/~vala-team/+archive/ubuntu/next))
-* meson and ninja
+* Vala 0.56+ and libgee-0.8
+* meson
 * GCC/Clang
 
+On Ubuntu and derivative the following should do:
+
+```bash
+sudo apt-get install build-essential \
+    libudev-dev libevdev-dev zlib1g-dev \
+    valac libgee-0.8-dev \
+    meson
+```
