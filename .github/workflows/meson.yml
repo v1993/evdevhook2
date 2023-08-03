@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       uses: awalsh128/cache-apt-pkgs-action@latest
       with:
-        packages: meson ninja valac libudev-dev libevdev-dev zlib1g-dev libgee-0.8-dev
+        packages: meson ninja-build valac libudev-dev libevdev-dev zlib1g-dev libgee-0.8-dev
         version: 1.0
 
     - name: Setup build directory
