@@ -77,6 +77,17 @@ namespace Evdevhook {
 		}
 	}
 
+	private async void cancellable_sleep(uint duration, Cancellable? cancellable = null) throws IOError {
+		var timeout_src = new TimeoutSource(duration);
+		var cancellable_src = new CancellableSource(cancellable);
+		source_set_dummy_callback(cancellable_src);
+		timeout_src.add_child_source(cancellable_src);
+		timeout_src.set_callback(cancellable_sleep.callback);
+		timeout_src.attach(MainContext.get_thread_default());
+		yield;
+		((!)cancellable).set_error_if_cancelled();
+	}
+
 	private Cemuhook.BatteryStatus battery_percentage_to_cemuhook(double percentage) {
 		if (percentage == 0.0) {
 			return NA;
@@ -153,6 +164,12 @@ namespace Evdevhook {
 			if (new Config().use_upower) {
 				battery_reader.begin();
 			}
+		}
+
+		// This currently does not get called on shutdown due to battery scanner holding a reference
+		// This doesn't really affect anything, but ideally should be fixed
+		~EvdevCemuhookDevice() {
+			debug("Device object destroyed");
 		}
 
 		private bool process_incoming(IOChannel source, IOCondition condition) {
@@ -254,7 +271,6 @@ namespace Evdevhook {
 				var core = yield Bus.get_proxy<UPower.Core>(SYSTEM, "org.freedesktop.UPower", "/org/freedesktop/UPower", NONE, cancellable);
 				// Retry a few times with a pause to ensure that UPower has time to initialize the device
 				for (int i = 0; battery == null && i < 4; ++i) {
-					cancellable.set_error_if_cancelled();
 					foreach (var devpath in yield core.enumerate_devices()) {
 						var upower_dev = yield Bus.get_proxy<UPower.Device>(SYSTEM, "org.freedesktop.UPower", devpath, NONE, cancellable);
 						if (upower_dev.serial == dev.uniq) {
@@ -262,15 +278,16 @@ namespace Evdevhook {
 							break;
 						}
 					}
-					GLib.Timeout.add(500, () => { battery_reader.callback(); return Source.REMOVE; });
-					yield;
+					yield cancellable_sleep(500, cancellable);
 				}
 
 				if (battery == null) {
+					debug("Giving up search for battery for %s\n", dev.uniq);
 					return;
 				}
 
-				while(!cancellable.is_cancelled()) {
+				// cancellable_sleep throws IOError.CANCELLED if interrupted
+				while(true) {
 					battery_status = battery_state_to_cemuhook(battery.state);
 					if (battery_status == NA) {
 						battery_status = battery_level_to_cemuhook(battery.battery_level);
@@ -278,8 +295,8 @@ namespace Evdevhook {
 					if (battery_status == NA) {
 						battery_status = battery_percentage_to_cemuhook(battery.percentage);
 					}
-					GLib.Timeout.add(5000, () => { battery_reader.callback(); return Source.REMOVE; });
-					yield;
+
+					yield cancellable_sleep(5000, cancellable);
 				}
 			} catch(IOError.CANCELLED e) {
 				// Expected
