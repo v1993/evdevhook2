@@ -69,6 +69,14 @@ namespace Evdevhook {
 		private void process_new_device(Udev.Device udevdev) {
 			try {
 				if (udevdev.get_property_value("ID_INPUT_ACCELEROMETER") != "1") return;
+				{
+					// DualSense for some reason creates a js device for accelerometer
+					// So only open eventXX devices and avoid a warning when evdev fails
+					unowned var? sysname = udevdev.get_sysname();
+					if (sysname == null || !sysname.has_prefix("event")) {
+						return;
+					}
+				}
 
 				unowned var? devnode = udevdev.get_devnode();
 				if (devnode == null) return;

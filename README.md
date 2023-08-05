@@ -5,12 +5,9 @@
 
 * Nintendo Switch Joy-Cons
 * Nintendo Switch Pro Controller
-* DualShock 3 controller
+* DualShock 3 controller (currently untested, feedback welcome)
 * DualShock 4 controller
 * DualSense controller
-
-Please note that as of right now only Nintendo controllers were tested. DualShock
-and DualSense *should* work - feedback would be very welcome.
 
 ## Configuration
 
