@@ -13,4 +13,4 @@ add_project_arguments(['--vapidir', extra_vapi_dir], language: 'vala')
 
 subdir('src')
 
-#install_data('ExampleConfig.ini', install_dir : get_option('datadir') / 'evdevhook2')
+install_data('ExampleConfig.ini', install_dir : get_option('datadir') / 'evdevhook2')
