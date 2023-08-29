@@ -1,6 +1,8 @@
 # Cemuhook UDP server for devices with modern Linux drivers - successor to original evdevhook
 ![GitHub Actions - Build Status](https://img.shields.io/github/actions/workflow/status/v1993/evdevhook2/meson.yml)
 
+[![AUR git package](https://img.shields.io/badge/aur-evdevhook2--git-blue)](https://aur.archlinux.org/packages/evdevhook2-git)
+
 ## Supported devices
 
 * Nintendo Switch Joy-Cons
