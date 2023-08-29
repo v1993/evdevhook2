@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://github.com/v1993/gcemuhook.git
+push-url = git@github.com:v1993/gcemuhook.git
+revision = acde07238a16c78e39f4aee241ab7ae53b46cde6
+depth = 1
