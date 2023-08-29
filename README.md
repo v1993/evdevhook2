@@ -49,6 +49,9 @@ meson install -C build
 * meson
 * GCC/Clang
 
+Optional:
+* UPower (runtime-only) - battery status reporting
+
 On Ubuntu and derivative the following should do:
 
 ```bash
