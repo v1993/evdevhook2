@@ -33,7 +33,7 @@ namespace Evdevhook {
 			monitor = new Udev.Monitor(uctx, "udev");
 			assert_nonnull(monitor);
 			monitor.filter_add_match_subsystem_devtype("input", null);
-			monitor_source = new IOSource(new IOChannel.unix_new(monitor.get_fd()), IN);
+			monitor_source = new IOSource(new IOChannel.unix_new(monitor.fd), IN);
 			// The following produces a warning, and it is intended
 			IOFunc cb = monitor_callback;
 			monitor_source.set_callback(cb);
@@ -46,8 +46,8 @@ namespace Evdevhook {
 			// Do this here to minimize chances of missing a device
 			monitor.enable_receiving();
 
-			for (unowned var? entry = uenum.get_list_entry(); entry != null; entry = entry.get_next()) {
-				var udevdev = new Udev.Device.from_syspath(uctx, entry.get_name());
+			for (unowned var? entry = uenum.list_entry; entry != null; entry = entry.next) {
+				var udevdev = new Udev.Device.from_syspath(uctx, entry.name);
 				if (udevdev != null) {
 					process_new_device(udevdev);
 				}
@@ -68,23 +68,24 @@ namespace Evdevhook {
 
 		private void process_new_device(Udev.Device udevdev) {
 			try {
-				if (udevdev.get_property_value("ID_INPUT_ACCELEROMETER") != "1") return;
-				{
-					// DualSense for some reason creates a js device for accelerometer
-					// So only open eventXX devices and avoid a warning when evdev fails
-					unowned var? sysname = udevdev.get_sysname();
-					if (sysname == null || !sysname.has_prefix("event")) {
-						return;
-					}
+				if (udevdev.get_property_value("ID_INPUT_ACCELEROMETER") != "1") {
+					return;
 				}
 
-				unowned var? devnode = udevdev.get_devnode();
-				if (devnode == null) return;
+				// DualSense for some reason creates a js device for accelerometer
+				// So only open eventXX devices and avoid a warning when evdev fails
+				if (udevdev.sysname == null || !udevdev.sysname.has_prefix("event")) {
+					return;
+				}
+
+				if (udevdev.devnode == null) {
+					return;
+				}
 
 				// We wrap fd into IOChannel both for watching and closing it
 				IOChannel iochan;
 				{
-					int fd = Posix.open(devnode, Posix.O_RDONLY | Posix.O_NONBLOCK);
+					int fd = Posix.open(udevdev.devnode, Posix.O_RDONLY | Posix.O_NONBLOCK);
 					if (fd == -1) return;
 
 					iochan = new IOChannel.unix_new(fd);

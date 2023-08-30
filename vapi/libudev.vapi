@@ -19,9 +19,9 @@ namespace Udev {
 	class ListEntry {
 		private ListEntry();
 
-		public unowned ListEntry? get_next();
-		public unowned string? get_name();
-		public unowned string? get_value();
+		public ListEntry? next { get; }
+		public string? name { get; }
+		public string? value { get; }
 	}
 
 	[CCode (cname = "struct udev_device", ref_function = "udev_device_ref", unref_function = "udev_device_unref")]
@@ -30,12 +30,12 @@ namespace Udev {
 		private Device();
 		public Device.from_syspath(Context ctx, string syspath);
 
-		public unowned string? get_devnode();
-		public unowned string? get_sysname();
-		public unowned string? get_property_value(string key);
-		public unowned ListEntry? get_properties_list_entry();
-		public unowned ListEntry? get_tags_list_entry();
+		public string? devnode { get; }
+		public string? sysname { get; }
+		public ListEntry? properties_list_entry { get; }
+		public ListEntry? tags_list_entry { get; }
 
+		public unowned string? get_property_value(string key);
 	}
 
 	[CCode (cname = "struct udev_enumerate", ref_function = "udev_enumerate_ref", unref_function = "udev_enumerate_unref")]
@@ -45,7 +45,7 @@ namespace Udev {
 
 		public int add_match_subsystem(string subsystem);
 		public int scan_devices();
-		public unowned ListEntry? get_list_entry();
+		public ListEntry? list_entry { get; }
 	}
 
 	[CCode (cname = "struct udev_monitor", ref_function = "udev_monitor_ref", unref_function = "udev_monitor_unref")]
@@ -54,9 +54,10 @@ namespace Udev {
 		[CCode (cname = "udev_monitor_new_from_netlink")]
 		public Monitor(Context ctx, string name);
 
+		public int fd { get; }
+
 		public int filter_add_match_subsystem_devtype(string? subsystem, string? devtype);
 		public int enable_receiving();
-		public int get_fd();
 		public Device? receive_device();
 	}
 }
