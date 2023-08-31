@@ -27,7 +27,7 @@ jobs:
         version: 1.0
 
     - name: Setup build directory
-      run: meson setup ${{github.workspace}}/build --buildtype=${{env.BUILD_TYPE}} -Db_lto=${{env.ENABLE_LTO}}
+      run: meson setup ${{github.workspace}}/build --fatal-meson-warnings --buildtype=${{env.BUILD_TYPE}} -Db_lto=${{env.ENABLE_LTO}}
 
     - name: Build
       run: meson compile -C ${{github.workspace}}/build
