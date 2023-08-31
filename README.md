@@ -24,7 +24,7 @@ different ports, it's possible to do so by providing a config file. See
 ## Quick build guide
 
 ```bash
-git clone --recursive https://github.com/v1993/evdevhook2.git
+git clone https://github.com/v1993/evdevhook2.git
 cd evdevhook2
 meson setup --buildtype=release -Db_lto=true --prefix=/usr build
 meson compile -C build
@@ -36,7 +36,6 @@ meson install -C build
 ```bash
 cd evdevhook2
 git pull
-git submodule update --recursive --init
 meson compile -C build
 # Optional
 meson install -C build
