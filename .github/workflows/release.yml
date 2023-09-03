@@ -1,0 +1,59 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm/v7
+          - linux/arm64
+    steps:
+      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/build-push-action@v4
+        with:
+          platforms: ${{ matrix.platform }}
+          outputs: build
+      - run: |
+          mkdir -p assets
+          find build -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | while read -r platform; do
+            cd "${GITHUB_WORKSPACE}/build/${platform}"
+            tar -czf "${GITHUB_WORKSPACE}/assets/${GITHUB_REPOSITORY##*/}-${GITHUB_REF_NAME}-${platform}.tar.gz" *
+            cd -
+          done
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: assets
+          path: |
+            assets
+            !assets/provenance.json
+
+  release:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: assets
+          path: assets
+      - run: |
+          algo="${SHA_ALGORITHM:-256}"
+          find assets -type f | while read -r asset; do
+            shasum --binary --algorithm "${algo}" "${asset}" >"${asset}.sha${algo}"
+          done
+        shell: bash
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: assets/*
