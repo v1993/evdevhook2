@@ -1,5 +1,10 @@
 name: Create GitHub Release
 
+env:
+  RUNTIME_DEPENDENCIES: '[ libudev1, libevdev2, libglib2.0-0, libgee-0.8-2, upower ]'
+  UBUNTU_RELEASE: jammy
+  UBUNTU_PUBKEY: 871920D1991BC93C
+
 on:
   push:
     tags:
@@ -13,29 +18,58 @@ jobs:
       matrix:
         platform:
           - linux/amd64
-          - linux/arm/v7
           - linux/arm64
     steps:
+      - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v2
       - uses: docker/setup-buildx-action@v2
       - uses: docker/build-push-action@v4
         with:
           platforms: ${{ matrix.platform }}
           outputs: build
-      - run: |
-          mkdir -p assets
-          find build -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | while read -r platform; do
-            cd "${GITHUB_WORKSPACE}/build/${platform}"
-            tar -czf "${GITHUB_WORKSPACE}/assets/${GITHUB_REPOSITORY##*/}-${GITHUB_REF_NAME}-${platform}.tar.gz" *
-            cd -
-          done
+          build-args: |
+            UBUNTU_RELEASE=${{ env.UBUNTU_RELEASE }}
+      - name: Prepare AppImage build
         shell: bash
+        env:
+          TARGET_PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -eu
+
+          mkdir -p AppDir
+          find build -mindepth 1 -maxdepth 1 -type d | while read -r path; do
+            cp -a "${path}" AppDir/usr
+            build_arch="$(basename "${path}")"
+
+            icon_path=AppDir/usr/share/icons/hicolor/scalable/mimetypes
+            icon_name=no-icon
+            mkdir -p "${icon_path}"
+            touch "${icon_path}/${icon_name}.svg"
+
+            touch dummy-to-prevent-fail-of-appimage-builder.AppImage.zsync
+
+            set -a
+            APPIMAGE_ARCH="${build_arch}"
+            APPDIR_APPINFO_ID="$(echo "${GITHUB_REPOSITORY}" | tr / .)"
+            APPDIR_APPINFO_NAME="${GITHUB_REPOSITORY##*/}"
+            APPDIR_APPINFO_VERSION="${GITHUB_REF_NAME}"
+            APPDIR_APPINFO_ICON="${icon_name}"
+            APPDIR_APPINFO_EXEC="usr/bin/${APPDIR_APPINFO_NAME}"
+            APPDIR_APPINFO_EXEC_ARGS='$@'
+            APPDIR_APT_ARCH="${TARGET_PLATFORM#*/}"
+            APPDIR_APT_SOURCES_DISTRIBUTION="${UBUNTU_RELEASE}"
+            APPDIR_APT_SOURCES_PUBKEY="${UBUNTU_PUBKEY}"
+            APPDIR_APT_INCLUDE="${RUNTIME_DEPENDENCIES}"
+            envsubst <AppImageBuilder.template.yml >AppImageBuilder.yml
+          done
+      - uses: AppImageCrafters/build-appimage@v1
       - uses: actions/upload-artifact@v3
         with:
-          name: assets
+          name: build-output
           path: |
-            assets
-            !assets/provenance.json
+            build
+            !build/provenance.json
+            *.AppImage
 
   release:
     runs-on: ubuntu-latest
@@ -46,8 +80,16 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: assets
-          path: assets
+          name: build-output
+      - shell: bash
+        run: |
+          mkdir -p assets
+          cp -a ./*.AppImage assets
+          find build -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | while read -r arch; do
+            cd "${GITHUB_WORKSPACE}/build/${arch}"
+            tar -czf "${GITHUB_WORKSPACE}/assets/${GITHUB_REPOSITORY##*/}-${GITHUB_REF_NAME}-${arch}.tar.gz" *
+            cd -
+          done
       - run: |
           algo="${SHA_ALGORITHM:-256}"
           find assets -type f | while read -r asset; do
