@@ -30,9 +30,9 @@ jobs:
           build-args: |
             UBUNTU_RELEASE=${{ env.UBUNTU_RELEASE }}
       - name: Prepare AppImage build
-        shell: bash
         env:
           TARGET_PLATFORM: ${{ matrix.platform }}
+        shell: bash
         run: |
           set -eu
 
@@ -65,11 +65,9 @@ jobs:
       - uses: AppImageCrafters/build-appimage@v1
       - uses: actions/upload-artifact@v3
         with:
-          name: build-output
-          path: |
-            build
-            !build/provenance.json
-            *.AppImage
+          name: appimages
+          path: ./*.AppImage
+          if-no-files-found: error
 
   release:
     runs-on: ubuntu-latest
@@ -80,22 +78,15 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: build-output
-      - shell: bash
+          name: appimages
+          path: assets
+      - name: Create checksum for release assets
+        shell: bash
         run: |
-          mkdir -p assets
-          cp -a ./*.AppImage assets
-          find build -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | while read -r arch; do
-            cd "${GITHUB_WORKSPACE}/build/${arch}"
-            tar -czf "${GITHUB_WORKSPACE}/assets/${GITHUB_REPOSITORY##*/}-${GITHUB_REF_NAME}-${arch}.tar.gz" *
-            cd -
-          done
-      - run: |
           algo="${SHA_ALGORITHM:-256}"
           find assets -type f | while read -r asset; do
             shasum --binary --algorithm "${algo}" "${asset}" >"${asset}.sha${algo}"
           done
-        shell: bash
       - uses: softprops/action-gh-release@v1
         with:
           files: assets/*
