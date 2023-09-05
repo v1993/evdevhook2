@@ -28,6 +28,7 @@ jobs:
           outputs: build
           build-args: |
             UBUNTU_RELEASE=${{ env.UBUNTU_RELEASE }}
+      - uses: rlespinasse/github-slug-action@v4
       - name: Prepare AppImage build
         env:
           TARGET_PLATFORM: ${{ matrix.platform }}
@@ -50,10 +51,10 @@ jobs:
             set -a
             APPIMAGE_ARCH="${build_arch}"
             APPDIR_APPINFO_ID="$(echo "${GITHUB_REPOSITORY}" | tr / .)"
-            APPDIR_APPINFO_NAME="${GITHUB_REPOSITORY##*/}"
-            APPDIR_APPINFO_VERSION="${GITHUB_REF_NAME}"
+            APPDIR_APPINFO_NAME="${GITHUB_REPOSITORY_NAME_PART}"
+            APPDIR_APPINFO_VERSION="${GITHUB_REF_SLUG}"
             APPDIR_APPINFO_ICON="${icon_name}"
-            APPDIR_APPINFO_EXEC="usr/bin/${APPDIR_APPINFO_NAME}"
+            APPDIR_APPINFO_EXEC="usr/bin/${GITHUB_REPOSITORY_NAME_PART}"
             APPDIR_APPINFO_EXEC_ARGS='$@'
             APPDIR_APT_ARCH="${TARGET_PLATFORM#*/}"
             APPDIR_APT_SOURCES_DISTRIBUTION="${UBUNTU_RELEASE}"
