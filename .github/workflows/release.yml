@@ -46,6 +46,8 @@ jobs:
             printenv | grep ^APPIMAGE_ >>"${GITHUB_ENV}"
           done
       - uses: AppImageCrafters/build-appimage@v1
+        with:
+          recipe: dist/AppImageBuilder.yml
       - uses: actions/upload-artifact@v3
         with:
           name: appimages
