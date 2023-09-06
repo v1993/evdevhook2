@@ -35,10 +35,6 @@ jobs:
         run: |
           set -eu
           find build -mindepth 1 -maxdepth 1 -type d | while read -r path; do
-            icon_path="${path}/usr/share/icons/hicolor/scalable/mimetypes"
-            mkdir -p "${icon_path}"
-            touch "${icon_path}/no-icon.svg"
-
             set -a
             APPIMAGE_PATH="${path}"
             APPIMAGE_VERSION="${GITHUB_REF_SLUG}"
@@ -52,7 +48,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: appimages
-          path: ./*.AppImage
+          path: ./*.AppImage*
           if-no-files-found: error
 
   release:

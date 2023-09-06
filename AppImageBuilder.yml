@@ -1,5 +1,11 @@
 version: 1
 
+script:
+- |
+  icon_path="{{APPIMAGE_PATH}}/usr/share/icons/hicolor/scalable/apps"
+  mkdir -p "${icon_path}"
+  cp -a evdevhook2-icon.svg "${icon_path}"
+
 AppDir:
   path: "{{APPIMAGE_PATH}}"
 
@@ -7,7 +13,7 @@ AppDir:
     id: org.v1993.evdevhook2
     name: evdevhook2
     version: "{{APPIMAGE_VERSION}}"
-    icon: no-icon
+    icon: evdevhook2-icon
     exec: usr/bin/evdevhook2
     exec_args: $@
 
