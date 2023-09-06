@@ -1,0 +1,49 @@
+version: 1
+
+script:
+- |
+  icon_path="{{APPIMAGE_PATH}}/usr/share/icons/hicolor/128x128/apps"
+  mkdir -p "${icon_path}"
+  cp -a dist/evdevhook2.png "${icon_path}"
+
+AppDir:
+  path: "{{APPIMAGE_PATH}}"
+
+  app_info:
+    id: org.v1993.evdevhook2
+    name: evdevhook2
+    version: "{{APPIMAGE_VERSION}}"
+    icon: evdevhook2
+    exec: usr/bin/evdevhook2
+    exec_args: $@
+
+  apt:
+    arch:
+      - "{{APPIMAGE_APT_ARCH}}"
+    sources:
+      - sourceline: deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ "{{APPIMAGE_APT_DISTRO}}" main
+        key_url: "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x{{APPIMAGE_APT_PUBKEY}}"
+      - sourceline: deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ "{{APPIMAGE_APT_DISTRO}}"-updates main
+      - sourceline: deb [arch=amd64] http://security.ubuntu.com/ubuntu/ "{{APPIMAGE_APT_DISTRO}}"-security main
+      - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ "{{APPIMAGE_APT_DISTRO}}" main
+      - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ "{{APPIMAGE_APT_DISTRO}}"-updates main
+      - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ "{{APPIMAGE_APT_DISTRO}}"-security main
+    include:
+      - libudev1
+      - libevdev2
+      - libglib2.0-0
+      - libgee-0.8-2
+
+  files:
+    exclude:
+      - usr/share/man
+      - usr/share/doc/*/README.*
+      - usr/share/doc/*/changelog.*
+      - usr/share/doc/*/NEWS.*
+      - usr/share/doc/*/TODO.*
+      - usr/share/lintian
+      - usr/lib/*/glib-2.0
+
+AppImage:
+  arch: "{{APPIMAGE_ARCH}}"
+  update-information: "gh-releases-zsync|v1993|evdevhook2|latest|evdevhook2-*-{{APPIMAGE_ARCH}}.AppImage.zsync"
