@@ -10,10 +10,10 @@ RUN meson setup \
       "--fatal-meson-warnings" \
       "--buildtype=${BUILD_TYPE}" \
       "-Db_lto=${ENABLE_LTO}" \
-      "--prefix=/release/$(uname -m)" \
+      "--prefix=/usr" \
       /build && \
     meson compile -C /build && \
-    meson install -C /build
+    meson install "--destdir=/release/$(uname -m)" -C /build
 
 FROM scratch AS export-stage
 COPY --from=build-stage /release/ /

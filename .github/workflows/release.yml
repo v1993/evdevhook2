@@ -1,7 +1,6 @@
-name: Create GitHub Release
+name: Build and publish AppImages
 
 env:
-  RUNTIME_DEPENDENCIES: '[ libudev1, libevdev2, libglib2.0-0, libgee-0.8-2, upower ]'
   UBUNTU_RELEASE: jammy
   UBUNTU_PUBKEY: 871920D1991BC93C
 
@@ -27,7 +26,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           outputs: build
           build-args: |
-            UBUNTU_RELEASE=${{ env.UBUNTU_RELEASE }}
+            UBUNTU_RELEASE
       - uses: rlespinasse/github-slug-action@v4
       - name: Prepare AppImage build
         env:
@@ -35,32 +34,23 @@ jobs:
         shell: bash
         run: |
           set -eu
-
-          mkdir -p AppDir
           find build -mindepth 1 -maxdepth 1 -type d | while read -r path; do
-            cp -a "${path}" AppDir/usr
-            build_arch="$(basename "${path}")"
-
-            icon_path=AppDir/usr/share/icons/hicolor/scalable/mimetypes
-            icon_name=no-icon
+            icon_path="${path}/usr/share/icons/hicolor/scalable/mimetypes"
             mkdir -p "${icon_path}"
-            touch "${icon_path}/${icon_name}.svg"
+            touch "${icon_path}/no-icon.svg"
 
-            touch dummy-to-prevent-fail-of-appimage-builder.AppImage.zsync
+            if [ ! -e *.AppImage.zsync ]; then
+              touch dummy-to-prevent-fail-of-appimage-builder.AppImage.zsync
+            fi
 
             set -a
-            APPIMAGE_ARCH="${build_arch}"
-            APPDIR_APPINFO_ID="$(echo "${GITHUB_REPOSITORY}" | tr / .)"
-            APPDIR_APPINFO_NAME="${GITHUB_REPOSITORY_NAME_PART}"
-            APPDIR_APPINFO_VERSION="${GITHUB_REF_SLUG}"
-            APPDIR_APPINFO_ICON="${icon_name}"
-            APPDIR_APPINFO_EXEC="usr/bin/${GITHUB_REPOSITORY_NAME_PART}"
-            APPDIR_APPINFO_EXEC_ARGS='$@'
-            APPDIR_APT_ARCH="${TARGET_PLATFORM#*/}"
-            APPDIR_APT_SOURCES_DISTRIBUTION="${UBUNTU_RELEASE}"
-            APPDIR_APT_SOURCES_PUBKEY="${UBUNTU_PUBKEY}"
-            APPDIR_APT_INCLUDE="${RUNTIME_DEPENDENCIES}"
-            envsubst <AppImageBuilder.template.yml >AppImageBuilder.yml
+            APPIMAGE_PATH="${path}"
+            APPIMAGE_VERSION="${GITHUB_REF_SLUG}"
+            APPIMAGE_APT_ARCH="${TARGET_PLATFORM#*/}"
+            APPIMAGE_APT_DISTRO="${UBUNTU_RELEASE}"
+            APPIMAGE_APT_PUBKEY="${UBUNTU_PUBKEY}"
+            APPIMAGE_ARCH="$(basename "${path}")"
+            printenv | grep ^APPIMAGE_ >>"${GITHUB_ENV}"
           done
       - uses: AppImageCrafters/build-appimage@v1
       - uses: actions/upload-artifact@v3
@@ -70,6 +60,7 @@ jobs:
           if-no-files-found: error
 
   release:
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     needs:
       - build
@@ -88,6 +79,5 @@ jobs:
             shasum --binary --algorithm "${algo}" "${asset}" >"${asset}.sha${algo}"
           done
       - uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: assets/*
