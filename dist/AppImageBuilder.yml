@@ -21,13 +21,13 @@ AppDir:
     arch:
       - "{{APPIMAGE_APT_ARCH}}"
     sources:
-      - sourceline: deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu/ "{{APPIMAGE_APT_DISTRO}}" main
+      - sourceline: deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ "{{APPIMAGE_APT_DISTRO}}" main
         key_url: "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x{{APPIMAGE_APT_PUBKEY}}"
-      - sourceline: deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu/ "{{APPIMAGE_APT_DISTRO}}"-updates main
-      - sourceline: deb [arch=amd64,i386] http://security.ubuntu.com/ubuntu/ "{{APPIMAGE_APT_DISTRO}}"-security main
-      - sourceline: deb [arch=arm64,armhf] http://ports.ubuntu.com/ubuntu-ports/ "{{APPIMAGE_APT_DISTRO}}" main
-      - sourceline: deb [arch=arm64,armhf] http://ports.ubuntu.com/ubuntu-ports/ "{{APPIMAGE_APT_DISTRO}}"-updates main
-      - sourceline: deb [arch=arm64,armhf] http://ports.ubuntu.com/ubuntu-ports/ "{{APPIMAGE_APT_DISTRO}}"-security main
+      - sourceline: deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ "{{APPIMAGE_APT_DISTRO}}"-updates main
+      - sourceline: deb [arch=amd64] http://security.ubuntu.com/ubuntu/ "{{APPIMAGE_APT_DISTRO}}"-security main
+      - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ "{{APPIMAGE_APT_DISTRO}}" main
+      - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ "{{APPIMAGE_APT_DISTRO}}"-updates main
+      - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ "{{APPIMAGE_APT_DISTRO}}"-security main
     include:
       - libudev1
       - libevdev2
