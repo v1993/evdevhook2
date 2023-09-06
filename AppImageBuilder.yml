@@ -28,5 +28,16 @@ AppDir:
       - libglib2.0-0
       - libgee-0.8-2
 
+  files:
+    exclude:
+      - usr/share/man
+      - usr/share/doc/*/README.*
+      - usr/share/doc/*/changelog.*
+      - usr/share/doc/*/NEWS.*
+      - usr/share/doc/*/TODO.*
+      - usr/share/lintian
+      - usr/lib/*/glib-2.0
+
 AppImage:
   arch: "{{APPIMAGE_ARCH}}"
+  update-information: "gh-releases-zsync|v1993|evdevhook2|latest|evdevhook2-*-{{APPIMAGE_ARCH}}.AppImage.zsync"
