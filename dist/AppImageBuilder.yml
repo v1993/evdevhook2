@@ -17,6 +17,10 @@ AppDir:
     exec: usr/bin/evdevhook2
     exec_args: $@
 
+  after_runtime: |
+    echo "X-AppImage-Integrate=false" | tee -a "${TARGET_APPDIR}/org.v1993.evdevhook2.desktop"
+    echo "Test file" | tee -a "${TARGET_APPDIR}/test_file.txt"
+
   apt:
     arch:
       - "{{APPIMAGE_APT_ARCH}}"
