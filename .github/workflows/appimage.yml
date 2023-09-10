@@ -57,7 +57,7 @@ jobs:
           done
 
       - name: Build AppImage
-        uses: AppImageCrafters/build-appimage@v1
+        uses: AppImageCrafters/build-appimage@v1.3
         with:
           recipe: dist/AppImageBuilder.yml
 
