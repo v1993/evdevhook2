@@ -2,13 +2,14 @@ version: 1
 
 script:
 - |
-  icon_path="{{APPIMAGE_PATH}}/usr/share/icons/hicolor/128x128/apps"
+  mv "{{APPIMAGE_SOURCE}}" "${TARGET_APPDIR}"
+  icon_path="${TARGET_APPDIR}/usr/share/icons/hicolor/128x128/apps"
   mkdir -p "${icon_path}"
   cp -a dist/evdevhook2.png "${icon_path}"
+  # Manual installation is required until fix of https://github.com/AppImageCrafters/build-appimage/issues/5
+  apt-get update && apt-get install -y --no-install-recommends squashfs-tools
 
 AppDir:
-  path: "{{APPIMAGE_PATH}}"
-
   app_info:
     id: org.v1993.evdevhook2
     name: evdevhook2
@@ -18,7 +19,7 @@ AppDir:
     exec_args: $@
 
   after_runtime: |
-    echo "X-AppImage-Integrate=false" >> "{{APPIMAGE_PATH}}/org.v1993.evdevhook2.desktop"
+    echo "X-AppImage-Integrate=false" >> "${TARGET_APPDIR}/org.v1993.evdevhook2.desktop"
 
   apt:
     arch:
