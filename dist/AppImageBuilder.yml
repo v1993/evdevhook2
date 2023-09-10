@@ -17,6 +17,9 @@ AppDir:
     exec: usr/bin/evdevhook2
     exec_args: $@
 
+  after_runtime: |
+    echo "X-AppImage-Integrate=false" >> "{{APPIMAGE_PATH}}/org.v1993.evdevhook2.desktop"
+
   apt:
     arch:
       - "{{APPIMAGE_APT_ARCH}}"
