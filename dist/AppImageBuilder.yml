@@ -2,15 +2,13 @@ version: 1
 
 script:
 - |
-  cp -rl "{{APPIMAGE_PATH}}" "${TARGET_APPDIR}"
+  mv "{{APPIMAGE_SOURCE}}" "${TARGET_APPDIR}"
   icon_path="${TARGET_APPDIR}/usr/share/icons/hicolor/128x128/apps"
   mkdir -p "${icon_path}"
   cp -a dist/evdevhook2.png "${icon_path}"
   apt-get update && apt-get install -y --no-install-recommends squashfs-tools
 
 AppDir:
-  path: "{{APPIMAGE_PATH}}"
-
   app_info:
     id: org.v1993.evdevhook2
     name: evdevhook2
