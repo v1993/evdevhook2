@@ -86,7 +86,30 @@ namespace Evdevhook {
 				IOChannel iochan;
 				{
 					int fd = Posix.open(udevdev.devnode, Posix.O_RDONLY | Posix.O_NONBLOCK);
-					if (fd == -1) return;
+					var saved_errno = errno;
+					if (fd == -1) {
+						string? devname = null;
+
+						// Search up the device tree until name is found or we leave input subsystem
+						for(unowned var? parent = udevdev;
+							parent != null && devname == null;
+							parent = parent.get_parent_with_subsystem_devtype("input", null)
+							) {
+							devname = parent.get_sysattr_value("name");
+						}
+
+						if (devname != null) {
+							printerr("\nFailed to open %s (%s) - %s\n", devname, udevdev.devnode, strerror(saved_errno));
+						} else {
+							printerr("\nFailed to open %s - %s\n", udevdev.devnode, strerror(saved_errno));
+						}
+
+						if (saved_errno == Posix.EACCES) {
+							printerr("The recommended way to fix this is by creating an appropriate udev rule and/or adding your user to a correct group.\n");
+							printerr("Running as root also works, but is not advised.\n");
+						}
+						return;
+					}
 
 					iochan = new IOChannel.unix_new(fd);
 					iochan.set_close_on_unref(true);
