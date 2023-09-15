@@ -36,6 +36,8 @@ namespace Udev {
 		public ListEntry? tags_list_entry { get; }
 
 		public unowned string? get_property_value(string key);
+		public unowned string? get_sysattr_value(string key);
+		public unowned Device? get_parent_with_subsystem_devtype(string? subsystem, string? devtype);
 	}
 
 	[CCode (cname = "struct udev_enumerate", ref_function = "udev_enumerate_ref", unref_function = "udev_enumerate_unref")]
