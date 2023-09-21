@@ -54,7 +54,7 @@ namespace Evdev {
 		public string name { get; }
 		public int id_product { get; }
 		public int id_vendor { get; }
-		public string uniq { get; }
+		public string? uniq { get; }
 		public string phys { get; }
 		public int id_bustype { get; }
 

@@ -19,7 +19,12 @@
  */
 
 namespace Evdevhook {
-	private uint64 uniq_to_mac(string uniq) {
+	private uint64 uniq_to_mac(string? uniq) {
+		if (uniq == null) {
+			debug("Device with no uniq set");
+			return 0;
+		}
+
 		var regex = /^([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]])$/;
 		GLib.MatchInfo reginfo = null;
 		if (!regex.match(uniq, 0, out reginfo) || reginfo == null) {

@@ -123,7 +123,8 @@ namespace Evdevhook {
 
 				var conf = new Config();
 				var? devtypeconf = conf.get_device_type_config((uint16)dev.id_vendor, (uint16)dev.id_product);
-				var? devconf = conf.get_device_config(dev.uniq);
+				var uniq = dev.uniq ?? "NULL";
+				var? devconf = conf.get_device_config(uniq);
 
 				if (devtypeconf != null && devconf != null) {
 					for (int code = Linux.Input.ABS_X; code <= Linux.Input.ABS_Z; ++code) {
@@ -133,7 +134,7 @@ namespace Evdevhook {
 						}
 					}
 
-					print("Found device %s (unique identifier '%s') - connecting... ", dev.name, dev.uniq);
+					print("Found device %s (unique identifier '%s') - connecting... ", dev.name, uniq);
 					add_device(new EvdevCemuhookDevice((owned)dev, (owned)iochan, (owned)devtypeconf, (owned)devconf));
 					print("done!\n");
 				}
