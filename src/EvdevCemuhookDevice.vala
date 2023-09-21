@@ -54,19 +54,19 @@ namespace Evdevhook {
 		}
 	}
 
-	private Cemuhook.BatteryStatus battery_state_to_cemuhook(uint state) {
-		switch(state) {
+	private Cemuhook.BatteryStatus battery_to_cemuhook(UPower.Device battery) {
+		switch(battery.state) {
 			case 1:
 				return CHARGING;
 			case 4:
 				return CHARGED;
 			default:
-				return NA;
+				return battery_to_cemuhook_1(battery);
 		}
 	}
 
-	private Cemuhook.BatteryStatus battery_level_to_cemuhook(uint level) {
-		switch(level) {
+	private Cemuhook.BatteryStatus battery_to_cemuhook_1(UPower.Device battery) {
+		switch(battery.battery_level) {
 			case 3:
 				return LOW;
 			case 4:
@@ -78,22 +78,13 @@ namespace Evdevhook {
 			case 8:
 				return FULL;
 			default:
-				return NA;
+				return battery_to_cemuhook_2(battery);
 		}
 	}
 
-	private async void cancellable_sleep(uint duration, Cancellable? cancellable = null) throws IOError {
-		var timeout_src = new TimeoutSource(duration);
-		var cancellable_src = new CancellableSource(cancellable);
-		source_set_dummy_callback(cancellable_src);
-		timeout_src.add_child_source(cancellable_src);
-		timeout_src.set_callback(cancellable_sleep.callback);
-		timeout_src.attach(MainContext.get_thread_default());
-		yield;
-		((!)cancellable).set_error_if_cancelled();
-	}
+	private Cemuhook.BatteryStatus battery_to_cemuhook_2(UPower.Device battery) {
+		var percentage = battery.percentage;
 
-	private Cemuhook.BatteryStatus battery_percentage_to_cemuhook(double percentage) {
 		if (percentage == 0.0) {
 			return NA;
 		}
@@ -115,6 +106,17 @@ namespace Evdevhook {
 		}
 
 		return DYING;
+	}
+
+	private async void cancellable_sleep(uint duration, Cancellable? cancellable = null) throws IOError {
+		var timeout_src = new TimeoutSource(duration);
+		var cancellable_src = new CancellableSource(cancellable);
+		source_set_dummy_callback(cancellable_src);
+		timeout_src.add_child_source(cancellable_src);
+		timeout_src.set_callback(cancellable_sleep.callback);
+		timeout_src.attach(MainContext.get_thread_default());
+		yield;
+		((!)cancellable).set_error_if_cancelled();
 	}
 
 	sealed class EvdevCemuhookDevice: Object, Cemuhook.AbstractPhysicalDevice {
@@ -293,13 +295,7 @@ namespace Evdevhook {
 
 				// cancellable_sleep throws IOError.CANCELLED if interrupted
 				while(true) {
-					battery_status = battery_state_to_cemuhook(battery.state);
-					if (battery_status == NA) {
-						battery_status = battery_level_to_cemuhook(battery.battery_level);
-					}
-					if (battery_status == NA) {
-						battery_status = battery_percentage_to_cemuhook(battery.percentage);
-					}
+					battery_status = battery_to_cemuhook(battery);
 
 					yield cancellable_sleep(5000, cancellable);
 				}
