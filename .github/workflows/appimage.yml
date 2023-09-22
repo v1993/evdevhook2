@@ -5,9 +5,11 @@ env:
   UBUNTU_PUBKEY: 871920D1991BC93C
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
+  push:
+    branches: main
+  release:
+    types: published
 
 jobs:
   build:
@@ -44,17 +46,16 @@ jobs:
           TARGET_PLATFORM: ${{ matrix.platform }}
         shell: bash
         run: |
-          set -eu
-          find build -mindepth 1 -maxdepth 1 -type d | while read -r path; do
-            set -a
-            APPIMAGE_SOURCE="${path}"
-            APPIMAGE_VERSION="${GITHUB_REF_SLUG}"
-            APPIMAGE_APT_ARCH="${TARGET_PLATFORM#*/}"
-            APPIMAGE_APT_DISTRO="${UBUNTU_RELEASE}"
-            APPIMAGE_APT_PUBKEY="${UBUNTU_PUBKEY}"
-            APPIMAGE_ARCH="$(basename "${path}")"
-            printenv | grep ^APPIMAGE_ >>"${GITHUB_ENV}"
-          done
+          set -eua
+          . build/.build-metadata.env
+          rm build/.build-metadata.env
+          APPIMAGE_SOURCE=build
+          APPIMAGE_VERSION="${GITHUB_REF_SLUG}"
+          APPIMAGE_APT_ARCH="${TARGETARCH}"
+          APPIMAGE_APT_DISTRO="${UBUNTU_RELEASE}"
+          APPIMAGE_APT_PUBKEY="${UBUNTU_PUBKEY}"
+          APPIMAGE_ARCH="${TARGETMACHINE}"
+          printenv | grep ^APPIMAGE_ >>"${GITHUB_ENV}"
 
       - name: Build AppImage
         uses: AppImageCrafters/build-appimage@v1.3

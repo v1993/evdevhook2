@@ -8,15 +8,19 @@ COPY . /
 
 ARG BUILD_TYPE=release
 ARG ENABLE_LTO=true
+ARG TARGETOS TARGETARCH TARGETVARIANT
 
 RUN meson setup \
+      --fatal-meson-warnings \
       "--buildtype=${BUILD_TYPE}" \
       "-Db_lto=${ENABLE_LTO}" \
-      "--prefix=/usr" \
+      --prefix=/usr \
       /build && \
     meson compile -C /build && \
-    meson install --destdir="/release/$(uname -m)" -C /build
+    meson install --destdir=/release -C /build
+
+RUN export "TARGETMACHINE=$(uname -m)" && \
+    printenv | grep ^TARGET >>/release/.build-metadata.env
 
 FROM scratch AS export-stage
-
-COPY --from=build-stage /release/ /
+COPY --from=build-stage /release/ /release/.build-metadata.env /
