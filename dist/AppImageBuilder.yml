@@ -7,7 +7,9 @@ script:
   mkdir -p "${icon_path}"
   cp -a dist/evdevhook2.png "${icon_path}"
   # Manual installation is required until fix of https://github.com/AppImageCrafters/build-appimage/issues/5
-  apt-get update && apt-get install -y --no-install-recommends squashfs-tools
+  if ! command -v mksquashfs >/dev/null; then
+    apt-get update && apt-get install -y --no-install-recommends squashfs-tools
+  fi
 
 AppDir:
   app_info:
