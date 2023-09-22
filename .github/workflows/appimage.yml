@@ -5,9 +5,11 @@ env:
   UBUNTU_PUBKEY: 871920D1991BC93C
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
+  push:
+    branches: main
+  release:
+    types: published
 
 jobs:
   build:
