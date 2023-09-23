@@ -22,7 +22,7 @@ namespace Evdevhook {
 	private uint64 uniq_to_mac(string? uniq) {
 		if (uniq == null) {
 			debug("Device with no uniq set");
-			return 0;
+			return Cemuhook.MAC_UNAVAILABLE;
 		}
 
 		var regex = /^([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]]):([[:xdigit:]][[:xdigit:]])$/;
@@ -132,7 +132,7 @@ namespace Evdevhook {
 		private Cemuhook.BatteryStatus battery_status = NA;
 		private bool has_timestamp_event = false;
 		private uint64 motion_timestamp = 0;
-		private uint64 mac = 0;
+		private uint64 mac = Cemuhook.MAC_UNAVAILABLE;
 
 		private int32 axis_center[Linux.Input.ABS_RZ + 1];
 		private int32 axis_resolution[Linux.Input.ABS_RZ + 1];

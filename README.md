@@ -36,6 +36,7 @@ meson install -C build
 ```bash
 cd evdevhook2
 git pull
+meson subprojects update
 meson compile -C build
 # Optional
 meson install -C build
