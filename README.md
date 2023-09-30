@@ -1,6 +1,7 @@
 # Cemuhook UDP server for devices with modern Linux drivers - successor to original evdevhook
 ![GitHub Actions - Build Status](https://img.shields.io/github/actions/workflow/status/v1993/evdevhook2/meson.yml)
 
+[![Static Badge](https://img.shields.io/badge/AppImage-x86__64%2FARM64-blue)](https://github.com/v1993/evdevhook2/releases/latest)
 [![AUR git package](https://img.shields.io/badge/aur-evdevhook2--git-blue)](https://aur.archlinux.org/packages/evdevhook2-git)
 
 ## Supported devices
