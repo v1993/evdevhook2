@@ -9,10 +9,9 @@
 [CCode (cheader_filename = "libevdev/libevdev.h", cprefix = "libevdev_", lower_case_cprefix = "libevdev_")]
 namespace Evdev {
 	namespace Utils {
-		// This is pretty stupid
 		private int error_check(int ret) throws GLib.IOError {
 			if (ret >= 0) return ret;
-			throw new GLib.IOError.FAILED(GLib.strerror(-ret));
+			throw GLib.IOError.from_errno(-ret);
 		}
 	}
 
