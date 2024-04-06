@@ -11,6 +11,7 @@
 * DualShock 3 controller (currently untested, feedback welcome)
 * DualShock 4 controller
 * DualSense controller
+* DualSense Edge controller
 
 ## Configuration
 
