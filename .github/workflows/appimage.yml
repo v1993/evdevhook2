@@ -27,14 +27,14 @@ jobs:
       - uses: rlespinasse/github-slug-action@v4
 
       - name: Setup qemu for docker
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         if: matrix.platform != 'linux/amd64'
 
       - name: Setup buildx for docker
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Compile in docker
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           platforms: ${{ matrix.platform }}
           outputs: build
@@ -63,9 +63,9 @@ jobs:
           recipe: dist/AppImageBuilder.yml
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: appimages
+          name: appimage-${{ matrix.platform }}
           path: |
             ./*.AppImage
             ./*.AppImage.zsync
@@ -83,10 +83,11 @@ jobs:
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: appimages
           path: assets
+          pattern: appimage-*
+          merge-multiple: true
       - name: Create checksum for release assets
         shell: bash
         run: |
