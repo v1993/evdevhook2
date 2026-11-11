@@ -23,18 +23,21 @@ jobs:
           - linux/arm64
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: rlespinasse/github-slug-action@v4
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Expose slug values
+        uses: rlespinasse/github-slug-action@v5
 
       - name: Setup qemu for docker
         uses: docker/setup-qemu-action@v3
         if: matrix.platform != 'linux/amd64'
 
       - name: Setup buildx for docker
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Compile in docker
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           platforms: ${{ matrix.platform }}
           outputs: build
@@ -62,7 +65,8 @@ jobs:
         with:
           recipe: dist/AppImageBuilder.yml
 
-      - uses: rlespinasse/slugify-value@v1.x
+      - name: Slugify platform
+        uses: rlespinasse/slugify-value@v1
         id: platform-slug
         with:
           key: PLATFORM
@@ -70,9 +74,9 @@ jobs:
           publish-env: false
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: appimage-${{steps.platform-slug.outputs.slug-url}}
+          name: appimage-${{ steps.platform-slug.outputs.slug-url }}
           path: |
             ./*.AppImage
             ./*.AppImage.zsync
@@ -95,6 +99,7 @@ jobs:
           path: assets
           pattern: appimage-*
           merge-multiple: true
+
       - name: Create checksum for release assets
         shell: bash
         run: |
@@ -102,6 +107,7 @@ jobs:
           find assets -type f | while read -r asset; do
             shasum --binary --algorithm "${algo}" "${asset}" >"${asset}.sha${algo}"
           done
+
       - name: Upload artifacts to GitHub release
         uses: softprops/action-gh-release@v1
         with:
