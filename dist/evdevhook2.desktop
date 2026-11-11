@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=evdevhook2
+Exec=usr/bin/evdevhook2
+Icon=evdevhook2
+StartupWMClass=evdevhook2
+Type=Application
+Terminal=false
+Categories=Utility;
+Comment=
