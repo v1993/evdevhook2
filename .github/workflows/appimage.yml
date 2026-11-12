@@ -1,8 +1,8 @@
 name: Build and publish AppImages
 
 env:
-  UBUNTU_RELEASE: jammy
-  UBUNTU_PUBKEY: 871920D1991BC93C
+  # main at 2026-11-09
+  SHARUN_URL: https://github.com/pkgforge-dev/Anylinux-AppImages/raw/e089c046e2bd34309d5e450713f5ea448cb7df52/useful-tools/quick-sharun.sh
 
 on:
   pull_request:
@@ -13,56 +13,43 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
 
     strategy:
       fail-fast: true
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-26.04
+          - platform: linux/arm64
+            runner: ubuntu-26.04-arm
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: rlespinasse/github-slug-action@v4
+      - name: Checkout
+        uses: actions/checkout@v7
+        with: # args are required for git-based version detection
+          ref: ${{ github.ref }}
+          fetch-depth: 20
+          fetch-tags: true
 
-      - name: Setup qemu for docker
-        uses: docker/setup-qemu-action@v3
-        if: matrix.platform != 'linux/amd64'
+      - name: Expose slug values
+        uses: rlespinasse/github-slug-action@v5
 
       - name: Setup buildx for docker
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
-      - name: Compile in docker
-        uses: docker/build-push-action@v5
+      - name: Build AppImage
+        uses: docker/build-push-action@v7
         with:
+          context: . # explicit path context is required for git-based version detection
           platforms: ${{ matrix.platform }}
           outputs: build
           build-args: |
-            UBUNTU_RELEASE
+            SHARUN_URL
+            OWNER=${{ env.GITHUB_REPOSITORY_OWNER_PART }}
 
-      - name: Prepare environment for building AppImage
-        env:
-          TARGET_PLATFORM: ${{ matrix.platform }}
-        shell: bash
-        run: |
-          set -eua
-          . build/.build-metadata.env
-          rm build/.build-metadata.env
-          APPIMAGE_SOURCE=build
-          APPIMAGE_VERSION="${GITHUB_REF_SLUG}"
-          APPIMAGE_APT_ARCH="${TARGETARCH}"
-          APPIMAGE_APT_DISTRO="${UBUNTU_RELEASE}"
-          APPIMAGE_APT_PUBKEY="${UBUNTU_PUBKEY}"
-          APPIMAGE_ARCH="${TARGETMACHINE}"
-          printenv | grep ^APPIMAGE_ >>"${GITHUB_ENV}"
-
-      - name: Build AppImage
-        uses: AppImageCrafters/build-appimage@v1.3
-        with:
-          recipe: dist/AppImageBuilder.yml
-
-      - uses: rlespinasse/slugify-value@v1.x
+      - name: Slugify platform
+        uses: rlespinasse/slugify-value@v1
         id: platform-slug
         with:
           key: PLATFORM
@@ -70,13 +57,60 @@ jobs:
           publish-env: false
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: appimage-${{steps.platform-slug.outputs.slug-url}}
+          name: appimage-${{ steps.platform-slug.outputs.slug-url }}
           path: |
-            ./*.AppImage
-            ./*.AppImage.zsync
+            build/*.AppImage
+            build/*.AppImage.zsync
           if-no-files-found: error
+
+  test:
+    runs-on: ${{ matrix.runner }}
+
+    needs:
+      - build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-26.04
+          - platform: linux/arm64
+            runner: ubuntu-26.04-arm
+
+    steps:
+      - name: Slugify platform
+        uses: rlespinasse/slugify-value@v1
+        id: platform-slug
+        with:
+          key: PLATFORM
+          value: ${{ matrix.platform }}
+          publish-env: false
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: assets
+          pattern: appimage-${{ steps.platform-slug.outputs.slug-url }}
+
+      - name: Test AppImage on Alpine
+        uses: addnab/docker-run-action@v3
+        with:
+          image: alpine
+          options: -v ${{ github.workspace }}/assets:/appimage
+          run: |
+            apk add coreutils
+            find /appimage/ -type f -name '*.AppImage' | while read -r appimage; do
+              chmod +x "${appimage}"
+              timeout 5 "${appimage}"
+              rc="$?"
+              if [ "$rc" -ne 124 ]; then
+                echo >&2 "AppImage returned unexpected code $rc."
+                if [ "$rc" -ne 0 ]; then exit "$rc"; else exit 1; fi
+              fi
+            done
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -84,6 +118,7 @@ jobs:
 
     needs:
       - build
+      - test
 
     permissions:
       contents: write
@@ -95,6 +130,7 @@ jobs:
           path: assets
           pattern: appimage-*
           merge-multiple: true
+
       - name: Create checksum for release assets
         shell: bash
         run: |
@@ -102,6 +138,7 @@ jobs:
           find assets -type f | while read -r asset; do
             shasum --binary --algorithm "${algo}" "${asset}" >"${asset}.sha${algo}"
           done
+
       - name: Upload artifacts to GitHub release
         uses: softprops/action-gh-release@v1
         with:
