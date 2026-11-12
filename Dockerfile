@@ -10,9 +10,11 @@ WORKDIR /project
 ARG BUILD_TYPE=release
 ARG ENABLE_LTO=true
 ARG TARGETOS TARGETARCH TARGETVARIANT
+ARG VERSION
 RUN <<EOF
   set -eu
 
+  meson rewrite kwargs set project / version "${VERSION:-$(git describe --tags --always)}"
   meson setup \
       --fatal-meson-warnings \
       "--buildtype=${BUILD_TYPE}" \
